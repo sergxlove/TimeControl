@@ -1,4 +1,5 @@
-﻿using TimeControl.Interfaces;
+﻿using Microsoft.Extensions.DependencyInjection;
+using TimeControl.Interfaces;
 
 namespace TimeControl
 {
@@ -6,7 +7,7 @@ namespace TimeControl
     {
         public List<ICommand> Commands { get; } = [];
 
-        public void ExecuteCommand(string command, DataCore data)
+        public void ExecuteCommand(string command, DataCore data, ServiceProvider provider)
         {
             string[] parts = command.Split(' ');
             string cmdName = parts[0];
@@ -14,7 +15,7 @@ namespace TimeControl
             var cmd = Commands.FirstOrDefault(a => a.Name == cmdName);
             if (cmd != null)
             {
-                cmd.Execute(args, data);
+                cmd.Execute(args, data, provider);
             }
         }
 

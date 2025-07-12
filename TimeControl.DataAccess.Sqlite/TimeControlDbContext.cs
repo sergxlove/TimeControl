@@ -6,9 +6,9 @@ namespace TimeControl.DataAccess.Sqlite
 {
     public class TimeControlDbContext : DbContext
     {
-        public TimeControlDbContext()
+        public TimeControlDbContext(DbContextOptions<TimeControlDbContext> options) : base(options)
         {
-            
+            Database.EnsureCreated();
         }
 
         public DbSet<NotesWorkEntity> NotesWork { get; set; }

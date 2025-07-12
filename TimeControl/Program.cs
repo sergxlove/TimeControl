@@ -1,8 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using TimeControl.Abstractions;
 using TimeControl.Cases;
 using TimeControl.DataAccess.Sqlite;
+using TimeControl.DataAccess.Sqlite.Abstractions;
+using TimeControl.DataAccess.Sqlite.Repositories;
+using TimeControl.Services;
 
 namespace TimeControl
 {
@@ -12,14 +16,15 @@ namespace TimeControl
         {
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("")
+                .AddJsonFile("D:\\projects\\TimeControl\\TimeControl\\appsettings.json")
                 .Build();
-            string connectionString = config.GetSection("Connection:ConnectionString").ToString()!;
+            string connectionString = config.GetSection("Connection")["ConnectionString"]!;
             ServiceCollection serviceCollection = new ServiceCollection();
             serviceCollection.AddDbContext<TimeControlDbContext>(options => 
                 options.UseSqlite(connectionString));
+            serviceCollection.AddSingleton<INotesWorkRepository, NotesWorkRepository>();
+            serviceCollection.AddSingleton<INotesWorkService, NotesWorkService>();
             ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
-                
                 
             ExecuteCommandCore cmd = new ExecuteCommandCore();
             DataCore data = new DataCore();
@@ -30,8 +35,8 @@ namespace TimeControl
             {
                 Console.Write("users > ");
                 commandLine = Console.ReadLine()!;
-                if (commandLine == "exit") break;
-                cmd.ExecuteCommand(commandLine, data);
+                if (commandLine == "exit") exit = true;
+                cmd.ExecuteCommand(commandLine, data, serviceProvider);
             }
         }
     }

@@ -1,12 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TimeControl.Core.Models;
+using TimeControl.DataAccess.Sqlite.Abstractions;
 using TimeControl.DataAccess.Sqlite.Models;
 
 namespace TimeControl.DataAccess.Sqlite.Repositories
-{
-    public class NotesWorkRepository
+{ 
+    public class NotesWorkRepository : INotesWorkRepository
     {
-        public NotesWorkRepository(TimeControlDbContext context) 
+        public NotesWorkRepository(TimeControlDbContext context)
         {
             _context = context;
         }
@@ -24,7 +25,7 @@ namespace TimeControl.DataAccess.Sqlite.Repositories
 
         }
 
-        public async Task<Guid> AddAsync(NotesWork notesWork) 
+        public async Task<Guid> AddAsync(NotesWork notesWork)
         {
             NotesWorkEntity notesWorkEntity = new NotesWorkEntity()
             {
@@ -40,9 +41,14 @@ namespace TimeControl.DataAccess.Sqlite.Repositories
             return notesWorkEntity.Id;
         }
 
-        public async Task<NotesWork> GetByDateAsync(DateOnly date)
+        public async Task<List<NotesWork>> GetByDateAsync(DateOnly date)
         {
-            var result = await _context.NotesWork.FindAsync(date);
+            var result = await _context.NotesWork
+                .Where(a => a.DateWork == date)
+                .ToListAsync();
+
+            return result.Select(a => NotesWork.Create(a.Id, a.DateWork,
+               a.Description, a.DurationHour, a.DurationMinute).notesWork!).ToList();
         }
     }
 }

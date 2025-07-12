@@ -53,7 +53,7 @@
             NotesWork? result = null;
             string error = string.Empty;
 
-            if(!string.IsNullOrEmpty(description))
+            if(string.IsNullOrEmpty(description))
             {
                 error = "description is null";
                 return (result, error);
