@@ -21,7 +21,7 @@
             DateWork = dateWork;
             Description = description;
             DurationHour = durationHour;
-            DurationMinute = durationHour;
+            DurationMinute = durationMinute;
         }
 
         public static (NotesWork? notesWork, string error) Create (Guid id, DateOnly dateWork, 
@@ -30,7 +30,7 @@
             NotesWork? result = null;
             string error = string.Empty;
 
-            if (!string.IsNullOrEmpty(description))
+            if (string.IsNullOrEmpty(description))
             {
                 error = "description is null";
                 return (result, error);
@@ -77,6 +77,9 @@
             return (result,  error);
         }
 
-
+        public override string ToString()
+        {
+            return $"{DateWork}   |   {Description}   |   {DurationHour} h. {DurationMinute} m.";
+        }
     }
 }
