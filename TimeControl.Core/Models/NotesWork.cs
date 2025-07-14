@@ -2,7 +2,7 @@
 {
     public class NotesWork
     {
-        public const int MIN_LENGTH_DESCRIPTION = 5;
+        public const int MIN_LENGTH_DESCRIPTION = 3;
         public const int MAX_LENGTH_DESCRIPTION = 200;
         public Guid Id { get; }
 

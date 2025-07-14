@@ -24,6 +24,8 @@ namespace TimeControl
                 options.UseSqlite(connectionString));
             serviceCollection.AddSingleton<INotesWorkRepository, NotesWorkRepository>();
             serviceCollection.AddSingleton<INotesWorkService, NotesWorkService>();
+            serviceCollection.AddSingleton<ITargetsRepository, TargetsRepository>();
+            serviceCollection.AddSingleton<ITargetsService, TargetsService>();
             ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
                 
             ExecuteCommandCore cmd = new ExecuteCommandCore();
