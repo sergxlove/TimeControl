@@ -13,6 +13,8 @@ namespace TimeControl.DataAccess.Sqlite
 
         public DbSet<NotesWorkEntity> NotesWork { get; set; }
 
+        public DbSet<TargetsEntity> Targets { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
@@ -21,6 +23,7 @@ namespace TimeControl.DataAccess.Sqlite
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new NotesWorkConfigurations());
+            modelBuilder.ApplyConfiguration(new TargetsConfigurations());
             base.OnModelCreating(modelBuilder);
         }
     }

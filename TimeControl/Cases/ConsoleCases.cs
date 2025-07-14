@@ -17,7 +17,9 @@ namespace TimeControl.Cases
                 new VersionCommand(),
                 new DeveloperCommand(),
                 new CancelCommand(),
-                new TaskCommand()
+                new TaskCommand(),
+                new SettingCommand(),
+                new TargetsCommand()
             };
             return commands;
         }
@@ -241,12 +243,55 @@ namespace TimeControl.Cases
                                 $"started {data.DateStart}");
                             break;
                         case "-d":
+                            if(item.Value == string.Empty)
+                            {
+                                Console.WriteLine("invalid arguments");
+                                return;
+                            }
+                            DateOnly date = DateOnly.Parse(item.Value);
+                            var noteService = provider.GetService<INotesWorkService>();
+                            var result = await noteService!.GetByDataAsync(date);
+                            foreach(var note in result)
+                            {
+                                Console.WriteLine(note.ToString());
+                            }
                             break;
                         default:
+                            Console.WriteLine("bad arguments");
                             break;
                     }
                 }
             }
+        }
+    }
+
+    public class SettingCommand : ICommand
+    {
+        public string Name => "settings";
+
+        public string Description => "\n" +
+                        "Структура: [command] [argument] \n" +
+                        "Отвечает за настройку программы\n" +
+                        "Аргументы: \n";
+
+        public Task Execute(string[] args, DataCore data, ServiceProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class TargetsCommand : ICommand
+    {
+        public string Name => "targets";
+
+        public string Description => "\n" +
+                        "Структура: [command] [argument] \n" +
+                        "Отвечает за управление задачами\n" +
+                        "Аргументы: \n";
+
+        public Task Execute(string[] args, DataCore data, ServiceProvider provider)
+        {
+            throw new NotImplementedException();
         }
     }
 }
