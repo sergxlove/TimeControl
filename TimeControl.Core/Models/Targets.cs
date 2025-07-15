@@ -48,5 +48,10 @@
             target = new Targets(id, dateWork, description, durationMinutes);
             return (target, error);
         }
+
+        public override string ToString()
+        {
+            return $"{DateWork}   |   {Description}   |   {DurationMinutes} m.";
+        }
     }
 }

@@ -45,5 +45,14 @@ namespace TimeControl.DataAccess.Sqlite.Repositories
                 .Where(a => a.Description == description)
                 .ExecuteDeleteAsync();
         }
+
+        public async Task<bool> IsHaveAsync(string description, DateOnly date)
+        {
+            var result = await _context.Targets
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.DateWork == date || a.Description == description);
+            if (result is null) return false;
+            return true;
+        }
     }
 }

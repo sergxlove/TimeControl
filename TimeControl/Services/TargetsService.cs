@@ -27,5 +27,10 @@ namespace TimeControl.Services
         {
             return await _repository.DeleteByDescriptionAsync(description);
         }
+
+        public async Task<bool> IsHaveAsync(string description, DateOnly date)
+        {
+            return await _repository.IsHaveAsync(description, date);
+        }
     }
 }
