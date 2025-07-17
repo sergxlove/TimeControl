@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using TimeControl.Abstractions;
 using TimeControl.Cases;
 using TimeControl.DataAccess.Sqlite;
@@ -14,6 +16,8 @@ namespace TimeControl
     {
         static void Main(string[] args)
         {
+            Appsettings sets = new Appsettings();
+            Console.WriteLine(JsonConvert.SerializeObject(sets));
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("D:\\projects\\TimeControl\\TimeControl\\appsettings.json")
