@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 using TimeControl.Abstractions;
 using TimeControl.Cases;
 using TimeControl.DataAccess.Sqlite;
@@ -16,13 +16,31 @@ namespace TimeControl
     {
         static void Main(string[] args)
         {
-            Appsettings sets = new Appsettings();
-            Console.WriteLine(JsonConvert.SerializeObject(sets));
+            var defaultConfig = new AppConfig();
+            string pathAppsetings = defaultConfig.PathAppsettings;
+            var optionsJson = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            };
+            if (!File.Exists(pathAppsetings))
+            {
+                string json = JsonSerializer.Serialize(defaultConfig, optionsJson);
+                Console.WriteLine(json);
+                File.WriteAllText(pathAppsetings, json);
+            }
+            else
+            {
+                string json = File.ReadAllText(pathAppsetings);
+                defaultConfig = JsonSerializer.Deserialize<AppConfig>(json);
+                if (defaultConfig is null) defaultConfig = new AppConfig();
+            }
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("D:\\projects\\TimeControl\\TimeControl\\appsettings.json")
+                .AddJsonFile(defaultConfig.PathAppsettings)
                 .Build();
             string connectionString = config.GetSection("Connection")["ConnectionString"]!;
+            string nickname = config.GetSection("")[""]!;
             ServiceCollection serviceCollection = new ServiceCollection();
             serviceCollection.AddDbContext<TimeControlDbContext>(options => 
                 options.UseSqlite(connectionString));
