@@ -17,11 +17,6 @@ namespace TimeControl
             {
                 cmd.Execute(args, data, provider);
             }
-            else
-            {
-                Console.WriteLine($"Не удалось найти команду: {cmdName}. Воспользуйтесь командой " +
-                    $"help для получения помощи");
-            }
         }
 
         public void Add(ICommand command)

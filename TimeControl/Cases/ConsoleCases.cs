@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 using TimeControl.Abstractions;
 using TimeControl.Core.Models;
 using TimeControl.Interfaces;
@@ -103,56 +105,48 @@ namespace TimeControl.Cases
 
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
-            await Task.CompletedTask;
-            if (data.TaskStarted)
+            try
             {
-                Console.WriteLine($"Задача {data.Description} не остановлена." +
-                    $" Что бы начать новую задачу необходимо остановить старую с помощью команды stop");
-                return;
-            }
-            if (args.Length == 0)
-            {
-                Console.WriteLine("Необходимо указать аргументы. Для получения подробной " +
-                    "информации воспользуйтесь командой: ? start ");
-                return;
-            }
-            Dictionary<string, string> argsPairs = new Dictionary<string, string>();
-            bool isKey = true;
-            string keyCash = string.Empty;
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (isKey)
+                await Task.CompletedTask;
+                if (data.TaskStarted)
                 {
-                    argsPairs.Add(args[i], string.Empty);
-                    keyCash = args[i];
-                    isKey = false;
+                    Console.WriteLine($"Задача {data.Description} не остановлена." +
+                        $" Что бы начать новую задачу необходимо остановить старую с помощью команды stop");
+                    return;
                 }
-                else
+                if (args.Length == 0)
                 {
-                    argsPairs[keyCash] = args[i];
-                    isKey = true;
+                    Console.WriteLine("Необходимо указать аргументы. Для получения подробной " +
+                        "информации воспользуйтесь командой: ? start ");
+                    return;
                 }
-            }
-            foreach (var item in argsPairs)
-            {
-                switch (item.Key)
+                Dictionary<string, string> argsPairs = ConvertArgsToDictionary(args);
+                foreach (var item in argsPairs)
                 {
-                    case "-m":
-                        if (item.Value is null)
-                        {
-                            Console.WriteLine("Необходимо ввести параметр");
+                    switch (item.Key)
+                    {
+                        case "-m":
+                            if (item.Value is null)
+                            {
+                                Console.WriteLine("Необходимо ввести параметр");
+                                return;
+                            }
+                            data.Description = item.Value!;
+                            break;
+                        default:
+                            Console.WriteLine($"Неизвестный аргумент : {item.Key}");
                             return;
-                        }
-                        data.Description = item.Value!;
-                        break;
-                    default:
-                        Console.WriteLine($"Неизвестный аргумент : {item.Key}");
-                        return;
+                    }
                 }
+                data.DateStart = DateTime.Now;
+                data.TaskStarted = true;
+                Console.WriteLine($"Задача: {data.Description} запущена {data.DateStart} ");
             }
-            data.DateStart = DateTime.Now;
-            data.TaskStarted = true;
-            Console.WriteLine($"Задача: {data.Description} запущена {data.DateStart} ");
+            catch
+            {
+                Console.WriteLine("Произошла ошибка");
+            }
+
         }
     }
 
@@ -182,9 +176,9 @@ namespace TimeControl.Cases
                     Console.WriteLine("Нет запущенных задач");
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine(ex);
+                Console.WriteLine("Произошла ошибка");
             }
         }
     }
@@ -290,37 +284,22 @@ namespace TimeControl.Cases
 
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
-            await Task.CompletedTask;
-            if (args.Length == 0)
+            try
             {
-                var notesService = provider.GetService<INotesWorkService>();
-                DateTime dateTimeNow = DateTime.Now;
-                var result = await notesService!.GetByDataAsync(new DateOnly
-                    (dateTimeNow.Year, dateTimeNow.Month, dateTimeNow.Day));
-                foreach (var note in result)
+                await Task.CompletedTask;
+                if (args.Length == 0)
                 {
-                    Console.WriteLine(note.ToString());
-                }
-            }
-            else
-            {
-                Dictionary<string, string> argsPairs = new Dictionary<string, string>();
-                bool isKey = true;
-                string keyCash = string.Empty;
-                for (int i = 0; i < args.Length; i++)
-                {
-                    if (isKey)
+                    var notesService = provider.GetService<INotesWorkService>();
+                    DateTime dateTimeNow = DateTime.Now;
+                    var result = await notesService!.GetByDataAsync(new DateOnly
+                        (dateTimeNow.Year, dateTimeNow.Month, dateTimeNow.Day));
+                    foreach (var note in result)
                     {
-                        argsPairs.Add(args[i], string.Empty);
-                        keyCash = args[i];
-                        isKey = false;
+                        Console.WriteLine(note.ToString());
                     }
-                    else
-                    {
-                        argsPairs[keyCash] = args[i];
-                        isKey = true;
-                    }
+                    return;
                 }
+                Dictionary<string, string> argsPairs = ConvertArgsToDictionary(args);
                 foreach (var item in argsPairs)
                 {
                     switch (item.Key)
@@ -349,6 +328,10 @@ namespace TimeControl.Cases
                     }
                 }
             }
+            catch
+            {
+                Console.WriteLine("Произошла ошибка");
+            }
         }
     }
 
@@ -359,10 +342,43 @@ namespace TimeControl.Cases
         public string Description => "\n" +
             "Структура: settings [Аргумент] \n" +
             "Отвечает за настройку программы\n" +
-            "Аргументы: \n";
+            "Аргументы: \n" +
+            "-u [Параметр]: смена пользовательского имени";
 
-        public Task Execute(string[] args, DataCore data, ServiceProvider provider)
+        public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
+            try
+            {
+                await Task.CompletedTask;
+                if (args.Length == 0)
+                {
+                    Console.WriteLine("Необходимо ввести аргументы");
+                    return;
+                }
+                Dictionary<string, string> argsPairs = ConvertArgsToDictionary(args);
+                foreach (var item in argsPairs)
+                {
+                    switch (item.Key)
+                    {
+                        case "-u":
+                            if(item.Value is null)
+                            {
+                                Console.WriteLine("Необходимо ввести параметр");
+                                return;
+                            }
+                            data.Config.Username = item.Value!;
+                            data.Config.CreateConfig();
+                            break;
+                        default:
+                            Console.WriteLine($"Неизвестный аргумент: {item.Key}");
+                            break;
+                    }
+                }
+            }
+            catch
+            {
+                Console.WriteLine("Произошла ошибка");
+            }
             throw new NotImplementedException();
         }
     }
@@ -375,55 +391,66 @@ namespace TimeControl.Cases
             "Структура: targets [Аргумент] \n" +
             "Отвечает за управление задачами\n" +
             "Аргументы: \n" +
-            "-d [Параметр]: указывает на дату для поиска задач";
+            "-d [Параметр]: указывает на дату для поиска задач\n" +
+            "-t [Параметр]: указывает на сегодняшнюю дату\n" +
+            "-y [Параметр]: указывает на вчерашнюю дату\n";
 
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
-            await Task.CompletedTask;
-            if (args.Length == 0)
+            try
             {
-                Console.WriteLine("Необходимо ввести аргументы");
-                return;
-            }
-            Dictionary<string, string> argsPairs = new Dictionary<string, string>();
-            bool isKey = true;
-            string keyCash = string.Empty;
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (isKey)
+                await Task.CompletedTask;
+                if (args.Length == 0)
                 {
-                    argsPairs.Add(args[i], string.Empty);
-                    keyCash = args[i];
-                    isKey = false;
+                    Console.WriteLine("Необходимо ввести аргументы");
+                    return;
                 }
-                else
+                Dictionary<string, string> argsPairs = ConvertArgsToDictionary(args);
+                var targetsService = provider.GetService<ITargetsService>();
+                List<Targets> result = new List<Targets>();
+                DateOnly date;
+                foreach (var item in argsPairs)
                 {
-                    argsPairs[keyCash] = args[i];
-                    isKey = true;
-                }
-            }
-            foreach (var item in argsPairs)
-            {
-                switch (item.Key)
-                {
-                    case "-d":
-                        if (item.Value == string.Empty)
-                        {
-                            Console.WriteLine($"Необходимо ввести параметр для {item.Value} ");
+                    switch (item.Key)
+                    {
+                        case "-d":
+                            if (item.Value == string.Empty)
+                            {
+                                Console.WriteLine($"Необходимо ввести параметр для {item.Value} ");
+                                return;
+                            }
+                            date = DateOnly.Parse(item.Value);
+                            result = await targetsService!.GetByDateAsync(date);
+                            foreach (var target in result)
+                            {
+                                Console.WriteLine(target.ToString());
+                            }
+                            break;
+                        case "-t":
+                            date = DateOnly.FromDateTime(DateTime.Now);
+                            result = await targetsService!.GetByDateAsync(date);
+                            foreach (var target in result)
+                            {
+                                Console.WriteLine(target.ToString());
+                            }
+                            break;
+                        case "-y":
+                            date = DateOnly.FromDateTime(DateTime.Now.AddDays(-1));
+                            result = await targetsService!.GetByDateAsync(date);
+                            foreach (var target in result)
+                            {
+                                Console.WriteLine(target.ToString());
+                            }
+                            break;
+                        default:
+                            Console.WriteLine($"Неизвестный аргумент: {item.Key}");
                             return;
-                        }
-                        DateOnly date = DateOnly.Parse(item.Value);
-                        var targetsService = provider.GetService<ITargetsService>();
-                        var result = await targetsService!.GetByDateAsync(date);
-                        foreach (var target in result)
-                        {
-                            Console.WriteLine(target.ToString());
-                        }
-                        break;
-                    default:
-                        Console.WriteLine($"Неизвестный аргумент: {item.Key}");
-                        return;
+                    }
                 }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Произошла ошибка : {ex.Message}");
             }
         }
     }
@@ -442,66 +469,73 @@ namespace TimeControl.Cases
 
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
-            await Task.CompletedTask;
-            if (args.Length == 0)
+            try
             {
-                Console.WriteLine("Необходимо ввсети аргументы");
-                return;
-            }
-            var argsPairs = ConvertArgsToDictionary(args);
-            string description = string.Empty;
-            DateOnly date = DateOnly.MinValue;
-            int durationMinute = 0;
-            foreach(var item in argsPairs)
-            {
-                switch(item.Key)
+                await Task.CompletedTask;
+                if (args.Length == 0)
                 {
-                    case "-n":
-                        description = item.Value;
-                        break;
-                    case "-d":
-                        date = DateOnly.Parse(item.Value);
-                        break;
-                    case "-m":
-                        durationMinute = Convert.ToInt32(item.Value);
-                        break;
-                    default:
-                        Console.WriteLine($"Неизвестный аргумент {item.Key}");
-                        break;
-                }
-            }
-            if (description == string.Empty)
-            {
-                Console.WriteLine("Нулевой параметр -n, воспользуйтесь командой:" +
-                    " ? targets-add для получения помощи");
-                return;
-            }
-            if (date == DateOnly.MinValue)
-            {
-                Console.WriteLine("Нулевой параметр -d, воспользуйтесь командой:" +
-                    " ? targets-add для получения помощи");
-                return;
-            }
-            if(durationMinute == 0)
-            {
-                Console.WriteLine("Нулевой параметр -m, воспользуйтесь командой:" +
-                    " ? targets-add для получения помощи");
-                return;
-            }
-            var targetService = provider.GetService<ITargetsService>();
-            if(await targetService!.IsHaveAsync(description, date))
-            {
-                Console.WriteLine("Данная цель уже существует");
-            }
-            else
-            {
-                var target = Targets.Create(date, description, durationMinute);
-                if(!string.IsNullOrEmpty(target.error))
-                {
-                    Console.WriteLine(target.error);
+                    Console.WriteLine("Необходимо ввсети аргументы");
                     return;
                 }
-                await targetService.AddAsync(target.target!);
+                var argsPairs = ConvertArgsToDictionary(args);
+                string description = string.Empty;
+                DateOnly date = DateOnly.MinValue;
+                int durationMinute = 0;
+                foreach (var item in argsPairs)
+                {
+                    switch (item.Key)
+                    {
+                        case "-n":
+                            description = item.Value;
+                            break;
+                        case "-d":
+                            date = DateOnly.Parse(item.Value);
+                            break;
+                        case "-m":
+                            durationMinute = Convert.ToInt32(item.Value);
+                            break;
+                        default:
+                            Console.WriteLine($"Неизвестный аргумент {item.Key}");
+                            break;
+                    }
+                }
+                if (description == string.Empty)
+                {
+                    Console.WriteLine("Нулевой параметр -n, воспользуйтесь командой:" +
+                        " ? targets-add для получения помощи");
+                    return;
+                }
+                if (date == DateOnly.MinValue)
+                {
+                    Console.WriteLine("Нулевой параметр -d, воспользуйтесь командой:" +
+                        " ? targets-add для получения помощи");
+                    return;
+                }
+                if (durationMinute == 0)
+                {
+                    Console.WriteLine("Нулевой параметр -m, воспользуйтесь командой:" +
+                        " ? targets-add для получения помощи");
+                    return;
+                }
+                var targetService = provider.GetService<ITargetsService>();
+                if (await targetService!.IsHaveAsync(description, date))
+                {
+                    Console.WriteLine("Данная цель уже существует");
+                }
+                else
+                {
+                    var target = Targets.Create(date, description, durationMinute);
+                    if (!string.IsNullOrEmpty(target.error))
+                    {
+                        Console.WriteLine(target.error);
+                        return;
+                    }
+                    await targetService.AddAsync(target.target!);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Произошла ошибка : {ex.Message}");
             }
         }
     }
@@ -519,50 +553,57 @@ namespace TimeControl.Cases
 
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
-            await Task.CompletedTask;
-            if (args.Length == 0)
+            try
             {
-                Console.WriteLine("Необходимо ввести аргументы");
-                return;
-            }
-            var argsPairs = ConvertArgsToDictionary(args);
-            string description = string.Empty;
-            DateOnly date = DateOnly.MinValue;
-            foreach (var item in argsPairs)
-            {
-                switch (item.Key)
+                await Task.CompletedTask;
+                if (args.Length == 0)
                 {
-                    case "-d":
-                        date = DateOnly.Parse(item.Value);
-                        break;
-                    case "-n":
-                        description = item.Value;
-                        break;
-                    default:
-                        Console.WriteLine($"Неизввестный аргумент : {item.Key}");
-                        return;
+                    Console.WriteLine("Необходимо ввести аргументы");
+                    return;
+                }
+                var argsPairs = ConvertArgsToDictionary(args);
+                string description = string.Empty;
+                DateOnly date = DateOnly.MinValue;
+                foreach (var item in argsPairs)
+                {
+                    switch (item.Key)
+                    {
+                        case "-d":
+                            date = DateOnly.Parse(item.Value);
+                            break;
+                        case "-n":
+                            description = item.Value;
+                            break;
+                        default:
+                            Console.WriteLine($"Неизввестный аргумент : {item.Key}");
+                            return;
+                    }
+                }
+                if (description == string.Empty)
+                {
+                    Console.WriteLine("Нулевой параметр -n, воспользуйтесь командой:" +
+                        " ? targets-add для получения помощи");
+                    return;
+                }
+                if (date == DateOnly.MinValue)
+                {
+                    Console.WriteLine("Нулевой параметр -d, воспользуйтесь командой:" +
+                         " ? targets-add для получения помощи");
+                    return;
+                }
+                var targetService = provider.GetService<ITargetsService>();
+                if (!await targetService!.IsHaveAsync(description, date))
+                {
+                    Console.WriteLine("Объект не найден");
+                }
+                else
+                {
+                    await targetService.DeleteByDescriptionAsync(description);
                 }
             }
-            if (description == string.Empty)
+            catch (Exception ex)
             {
-                Console.WriteLine("Нулевой параметр -n, воспользуйтесь командой:" +
-                    " ? targets-add для получения помощи");
-                return;
-            }
-            if (date == DateOnly.MinValue)
-            {
-                Console.WriteLine("Нулевой параметр -d, воспользуйтесь командой:" +
-                     " ? targets-add для получения помощи");
-                return;
-            }
-            var targetService = provider.GetService<ITargetsService>();
-            if (!await targetService!.IsHaveAsync(description, date))
-            {
-                Console.WriteLine("Объект не найден");
-            }
-            else
-            {
-                await targetService.DeleteByDescriptionAsync(description);
+                Console.WriteLine($"Произошла ошибка : {ex.Message}");
             }
         }
     }

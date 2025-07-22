@@ -2,11 +2,17 @@
 {
     public class DataCore
     {
+        public DataCore(AppConfig config)
+        {
+            Config = config;
+        }
         public DateTime DateStart { get; set; }
 
         public string Description { get; set; } = string.Empty;
 
-        public bool TaskStarted = false;
+        public bool TaskStarted { get; set; } = false;
+
+        public AppConfig Config { get; set; }
 
         public void Clear()
         {
