@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using TimeControl.Abstractions;
 using TimeControl.Core.Models;
@@ -280,7 +281,8 @@ namespace TimeControl.Cases
             "Отвечает за управление задачами\n" +
             "Аргументы: \n" +
             "-c : указывает на вывод информации о текущей задаче \n" +
-            "-d [Параметр]: указывает дату для вывода задача в определенный день\n";
+            "-d [Параметр]: указывает дату для вывода задача в определенный день\n" +
+            "-s : производит синхронизацию задач и поставленных целей\n";
 
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
@@ -322,6 +324,23 @@ namespace TimeControl.Cases
                                 Console.WriteLine(note.ToString());
                             }
                             break;
+                        case "-s":
+                            var targetsService = provider.GetService<ITargetsService>();
+                            var notesService = provider.GetService<INotesWorkService>();
+                            var currentTargets = await targetsService!.GetByDateAsync(DateOnly.FromDateTime(DateTime.Now));
+                            var currentNotes = await notesService!.GetByDataAsync(DateOnly.FromDateTime(DateTime.Now));
+                            List<Targets> updatedTargets = new List<Targets>();
+                            for (int i = 0; i < currentNotes.Count; i++)
+                            {
+                                for (int j = 0; j < currentTargets.Count; j++)
+                                {
+                                    if (currentNotes[i].Description ==  currentTargets[j].Description)
+                                    {
+                                        currentTargets[j].DoneDurationMinutes += currentNotes[i].DurationHour * 60 + currentNotes[i].DurationMinute;
+                                    }
+                                }
+                            }
+                            break;
                         default:
                             Console.WriteLine($"Неизвестный аргумент: {item.Key}");
                             return;
@@ -361,7 +380,7 @@ namespace TimeControl.Cases
                     switch (item.Key)
                     {
                         case "-u":
-                            if(item.Value is null)
+                            if (item.Value is null)
                             {
                                 Console.WriteLine("Необходимо ввести параметр");
                                 return;
@@ -448,7 +467,7 @@ namespace TimeControl.Cases
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine($"Произошла ошибка : {ex.Message}");
             }

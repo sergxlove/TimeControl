@@ -32,5 +32,10 @@ namespace TimeControl.Services
         {
             return await _repository.IsHaveAsync(description, date);
         }
+
+        public async Task<int> UpdateAsync(Targets target)
+        {
+            return await _repository.UpdateAsync(target);
+        }
     }
 }

@@ -8,5 +8,6 @@ namespace TimeControl.DataAccess.Sqlite.Abstractions
         Task<int> DeleteByDescriptionAsync(string description);
         Task<List<Targets>> GetByDateAsync(DateOnly date);
         Task<bool> IsHaveAsync(string description, DateOnly date);
+        Task<int> UpdateAsync(Targets target);
     }
 }
