@@ -9,5 +9,9 @@
         public string Description { get; set; } = string.Empty;
 
         public int DurationMinutes { get; set; }
+
+        public int DoneDurationMinutes { get; set; }
+
+        public bool IsDone { get; set; }
     }
 }

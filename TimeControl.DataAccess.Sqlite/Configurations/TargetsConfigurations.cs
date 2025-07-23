@@ -20,6 +20,10 @@ namespace TimeControl.DataAccess.Sqlite.Configurations
                 .HasMaxLength(Targets.MAX_LENGTH_DESCRIPTION);
             builder.Property(x => x.DurationMinutes)
                 .IsRequired();
+            builder.Property(x => x.DoneDurationMinutes)
+                .IsRequired();
+            builder.Property(x => x.IsDone)
+                .IsRequired();
         }
     }
 }
