@@ -1,7 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
 using TimeControl.Abstractions;
 using TimeControl.Core.Models;
 using TimeControl.Interfaces;
@@ -43,6 +40,7 @@ namespace TimeControl.Cases
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
             await Task.CompletedTask;
+            data.Logger.Information($"invoke methods InfoCommand");
             if (args.Length == 0)
             {
                 Console.WriteLine(Description);
@@ -86,6 +84,7 @@ namespace TimeControl.Cases
                         cmd = new TargetsDeleteCommand();
                         break;
                     default:
+                        data.Logger.Warning($"bad arguments: {args[0]}");
                         Console.WriteLine($"Неизвестный аргумент: {args[0]}");
                         return;
                 }
@@ -102,21 +101,24 @@ namespace TimeControl.Cases
             "Структура: start [Аргумент] \n" +
             "Отвечает за запуск задачи\n" +
             "Аргументы: \n" +
-            "-m [Параметр]: указание названия задачи";
+            "--name(-n) [Параметр]: указание названия задачи";
 
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
             try
             {
                 await Task.CompletedTask;
+                data.Logger.Information("invoke method StartCommand");
                 if (data.TaskStarted)
                 {
+                    data.Logger.Warning("task is not stopped");
                     Console.WriteLine($"Задача {data.Description} не остановлена." +
                         $" Что бы начать новую задачу необходимо остановить старую с помощью команды stop");
                     return;
                 }
                 if (args.Length == 0)
                 {
+                    data.Logger.Warning("null arguments");
                     Console.WriteLine("Необходимо указать аргументы. Для получения подробной " +
                         "информации воспользуйтесь командой: ? start ");
                     return;
@@ -126,15 +128,18 @@ namespace TimeControl.Cases
                 {
                     switch (item.Key)
                     {
-                        case "-m":
+                        case "--name":
+                        case "-n":
                             if (item.Value is null)
                             {
                                 Console.WriteLine("Необходимо ввести параметр");
+                                data.Logger.Warning("null parametrs");
                                 return;
                             }
                             data.Description = item.Value!;
                             break;
                         default:
+                            data.Logger.Warning($"bad arguments: {args[0]}");
                             Console.WriteLine($"Неизвестный аргумент : {item.Key}");
                             return;
                     }
@@ -143,8 +148,9 @@ namespace TimeControl.Cases
                 data.TaskStarted = true;
                 Console.WriteLine($"Задача: {data.Description} запущена {data.DateStart} ");
             }
-            catch
+            catch(Exception ex)
             {
+                data.Logger.Error(ex.ToString());
                 Console.WriteLine("Произошла ошибка");
             }
 
@@ -163,6 +169,7 @@ namespace TimeControl.Cases
         {
             try
             {
+                data.Logger.Information("invoke methods StopCommand");
                 if (data.TaskStarted)
                 {
                     var notesService = provider.GetService<INotesWorkService>();
@@ -174,11 +181,13 @@ namespace TimeControl.Cases
                 }
                 else
                 {
+                    data.Logger.Warning("no running tasks");
                     Console.WriteLine("Нет запущенных задач");
                 }
             }
-            catch
+            catch(Exception ex)
             {
+                data.Logger.Error(ex.ToString());
                 Console.WriteLine("Произошла ошибка");
             }
         }
@@ -195,6 +204,7 @@ namespace TimeControl.Cases
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
             await Task.CompletedTask;
+            data.Logger.Information("invoke methods HelpCommand");
             string information = "Доступные команды: \n" +
                 "? - вывод подробной информации о команде \n" +
                 "start - запуск новой задачи \n" +
@@ -222,6 +232,7 @@ namespace TimeControl.Cases
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
             await Task.CompletedTask;
+            data.Logger.Information("invoke methods VersionCommand");
             Console.WriteLine("\n" +
                 "Версия 1.0.0, developer sergxlove, 2025\n" +
                 "Все права защищены\n");
@@ -239,6 +250,7 @@ namespace TimeControl.Cases
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
             await Task.CompletedTask;
+            data.Logger.Information("invoke method DeveloperCommand");
             Console.WriteLine("\n" +
                 "╔══╗╔═══╗╔═══╗╔═══╗╔══╗╔══╗╔╗──╔══╗╔╗╔╗╔═══╗\n" +
                 "║╔═╝║╔══╝║╔═╗║║╔══╝╚═╗║║╔═╝║║──║╔╗║║║║║║╔══╝\n" +
@@ -260,6 +272,7 @@ namespace TimeControl.Cases
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
             await Task.CompletedTask;
+            data.Logger.Information("invoke method CanselCommand");
             if (data.TaskStarted)
             {
                 Console.WriteLine($"Задача {data.Description} отменена");
@@ -280,14 +293,15 @@ namespace TimeControl.Cases
             "Структура: tasks [Аргументы] \n" +
             "Отвечает за управление задачами\n" +
             "Аргументы: \n" +
-            "-c : указывает на вывод информации о текущей задаче \n" +
-            "-d [Параметр]: указывает дату для вывода задача в определенный день\n" +
-            "-s : производит синхронизацию задач и поставленных целей\n";
+            "--current(-c) : указывает на вывод информации о текущей задаче \n" +
+            "--date(-d) [Параметр]: указывает дату для вывода задача в определенный день\n" +
+            "--sync(-s) : производит синхронизацию задач и поставленных целей\n";
 
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
             try
             {
+                data.Logger.Information("invoke methods TasksCommand");
                 await Task.CompletedTask;
                 if (args.Length == 0)
                 {
@@ -306,13 +320,16 @@ namespace TimeControl.Cases
                 {
                     switch (item.Key)
                     {
+                        case "--current":
                         case "-c":
                             if (data.TaskStarted) Console.WriteLine($"Задача {data.Description} " +
                                 $"запущена {data.DateStart}");
                             break;
+                        case "--date":
                         case "-d":
                             if (item.Value == string.Empty)
                             {
+                                data.Logger.Warning("null parametr");
                                 Console.WriteLine("Необходимо ввести параметр");
                                 return;
                             }
@@ -324,6 +341,7 @@ namespace TimeControl.Cases
                                 Console.WriteLine(note.ToString());
                             }
                             break;
+                        case "--sync":
                         case "-s":
                             var targetsService = provider.GetService<ITargetsService>();
                             var notesService = provider.GetService<INotesWorkService>();
@@ -336,19 +354,22 @@ namespace TimeControl.Cases
                                 {
                                     if (currentNotes[i].Description ==  currentTargets[j].Description)
                                     {
-                                        currentTargets[j].DoneDurationMinutes += currentNotes[i].DurationHour * 60 + currentNotes[i].DurationMinute;
+                                        currentTargets[j].UpdateDuration(currentNotes[i].DurationHour * 60 + currentNotes[i].DurationMinute);
+                                        await targetsService.UpdateAsync(currentTargets[j]);
                                     }
                                 }
                             }
                             break;
                         default:
+                            data.Logger.Warning($"bad arguments: {args[0]}");
                             Console.WriteLine($"Неизвестный аргумент: {item.Key}");
                             return;
                     }
                 }
             }
-            catch
+            catch(Exception ex)
             {
+                data.Logger.Error(ex.ToString());
                 Console.WriteLine("Произошла ошибка");
             }
         }
@@ -362,15 +383,17 @@ namespace TimeControl.Cases
             "Структура: settings [Аргумент] \n" +
             "Отвечает за настройку программы\n" +
             "Аргументы: \n" +
-            "-u [Параметр]: смена пользовательского имени";
+            "--username(-u) [Параметр]: смена пользовательского имени";
 
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
             try
             {
+                data.Logger.Information("invoke method SettingsCommand");
                 await Task.CompletedTask;
                 if (args.Length == 0)
                 {
+                    data.Logger.Warning("null arguments");
                     Console.WriteLine("Необходимо ввести аргументы");
                     return;
                 }
@@ -379,9 +402,11 @@ namespace TimeControl.Cases
                 {
                     switch (item.Key)
                     {
+                        case "--username":
                         case "-u":
                             if (item.Value is null)
                             {
+                                data.Logger.Warning("null parametr");
                                 Console.WriteLine("Необходимо ввести параметр");
                                 return;
                             }
@@ -389,13 +414,15 @@ namespace TimeControl.Cases
                             data.Config.CreateConfig();
                             break;
                         default:
+                            data.Logger.Warning($"bad arguments: {args[0]}");
                             Console.WriteLine($"Неизвестный аргумент: {item.Key}");
                             break;
                     }
                 }
             }
-            catch
+            catch(Exception ex)
             {
+                data.Logger.Error(ex.ToString());
                 Console.WriteLine("Произошла ошибка");
             }
             throw new NotImplementedException();
@@ -410,17 +437,19 @@ namespace TimeControl.Cases
             "Структура: targets [Аргумент] \n" +
             "Отвечает за управление задачами\n" +
             "Аргументы: \n" +
-            "-d [Параметр]: указывает на дату для поиска задач\n" +
-            "-t [Параметр]: указывает на сегодняшнюю дату\n" +
-            "-y [Параметр]: указывает на вчерашнюю дату\n";
+            "--date(-d) [Параметр]: указывает на дату для поиска задач\n" +
+            "--today(-t) [Параметр]: указывает на сегодняшнюю дату\n" +
+            "--yesterday(-y) [Параметр]: указывает на вчерашнюю дату\n";
 
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
             try
             {
                 await Task.CompletedTask;
+                data.Logger.Information("invoke methods TargetsCommand");
                 if (args.Length == 0)
                 {
+                    data.Logger.Warning("null argument");
                     Console.WriteLine("Необходимо ввести аргументы");
                     return;
                 }
@@ -432,9 +461,11 @@ namespace TimeControl.Cases
                 {
                     switch (item.Key)
                     {
+                        case "--date":
                         case "-d":
                             if (item.Value == string.Empty)
                             {
+                                data.Logger.Warning("null parametr");
                                 Console.WriteLine($"Необходимо ввести параметр для {item.Value} ");
                                 return;
                             }
@@ -445,6 +476,7 @@ namespace TimeControl.Cases
                                 Console.WriteLine(target.ToString());
                             }
                             break;
+                        case "--today":
                         case "-t":
                             date = DateOnly.FromDateTime(DateTime.Now);
                             result = await targetsService!.GetByDateAsync(date);
@@ -453,6 +485,7 @@ namespace TimeControl.Cases
                                 Console.WriteLine(target.ToString());
                             }
                             break;
+                        case "--yesterday":
                         case "-y":
                             date = DateOnly.FromDateTime(DateTime.Now.AddDays(-1));
                             result = await targetsService!.GetByDateAsync(date);
@@ -462,6 +495,7 @@ namespace TimeControl.Cases
                             }
                             break;
                         default:
+                            data.Logger.Warning($"bad arguments: {args[0]}");
                             Console.WriteLine($"Неизвестный аргумент: {item.Key}");
                             return;
                     }
@@ -469,7 +503,8 @@ namespace TimeControl.Cases
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Произошла ошибка : {ex.Message}");
+                data.Logger.Error(ex.ToString());
+                Console.WriteLine($"Произошла ошибка");
             }
         }
     }
@@ -482,17 +517,19 @@ namespace TimeControl.Cases
             "Структура: targets-add [Аргументы] \n" +
             "Отвечает за добавление задач\n" +
             "Аргументы: \n" +
-            "-n [Параметр]: указывает на название задачи\n" +
-            "-d [Параметр]: указывает на дату задачи\n" +
-            "-m [Параметр]: указывает на продолжительность задачи \n";
+            "--name(-n) [Параметр]: указывает на название задачи\n" +
+            "--date(-d) [Параметр]: указывает на дату задачи\n" +
+            "--minutes(-m) [Параметр]: указывает на продолжительность задачи \n";
 
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
             try
             {
                 await Task.CompletedTask;
+                data.Logger.Information("invoke method TargetsAddCommand");
                 if (args.Length == 0)
                 {
+                    data.Logger.Warning("null arguments");
                     Console.WriteLine("Необходимо ввсети аргументы");
                     return;
                 }
@@ -504,34 +541,41 @@ namespace TimeControl.Cases
                 {
                     switch (item.Key)
                     {
+                        case "--name":
                         case "-n":
                             description = item.Value;
                             break;
+                        case "--date":
                         case "-d":
                             date = DateOnly.Parse(item.Value);
                             break;
+                        case "-minutes":
                         case "-m":
                             durationMinute = Convert.ToInt32(item.Value);
                             break;
                         default:
+                            data.Logger.Warning($"bad arguments: {args[0]}");
                             Console.WriteLine($"Неизвестный аргумент {item.Key}");
                             break;
                     }
                 }
                 if (description == string.Empty)
                 {
+                    data.Logger.Warning("null parametr for -n");
                     Console.WriteLine("Нулевой параметр -n, воспользуйтесь командой:" +
                         " ? targets-add для получения помощи");
                     return;
                 }
                 if (date == DateOnly.MinValue)
                 {
+                    data.Logger.Warning("null parametr for -d");
                     Console.WriteLine("Нулевой параметр -d, воспользуйтесь командой:" +
                         " ? targets-add для получения помощи");
                     return;
                 }
                 if (durationMinute == 0)
                 {
+                    data.Logger.Warning("null parametr for -m");
                     Console.WriteLine("Нулевой параметр -m, воспользуйтесь командой:" +
                         " ? targets-add для получения помощи");
                     return;
@@ -554,7 +598,8 @@ namespace TimeControl.Cases
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Произошла ошибка : {ex.Message}");
+                data.Logger.Error(ex.ToString());
+                Console.WriteLine($"Произошла ошибка");
             }
         }
     }
@@ -567,16 +612,18 @@ namespace TimeControl.Cases
             "Структура: target-del [Аргумент] \n" +
             "Отвечает за управление задачами\n" +
             "Аргументы: \n" +
-            "-d [Параметр]: указывает на дату задачи\n" +
-            "-n [Параметр]: указывает на название задачи\n";
+            "--date(-d) [Параметр]: указывает на дату задачи\n" +
+            "--name(-n) [Параметр]: указывает на название задачи\n";
 
         public async Task Execute(string[] args, DataCore data, ServiceProvider provider)
         {
             try
             {
                 await Task.CompletedTask;
+                data.Logger.Information("invoke method TargetsDeleteCommand");
                 if (args.Length == 0)
                 {
+                    data.Logger.Warning("null arguments");
                     Console.WriteLine("Необходимо ввести аргументы");
                     return;
                 }
@@ -587,25 +634,30 @@ namespace TimeControl.Cases
                 {
                     switch (item.Key)
                     {
+                        case "--date":
                         case "-d":
                             date = DateOnly.Parse(item.Value);
                             break;
+                        case "--name":
                         case "-n":
                             description = item.Value;
                             break;
                         default:
+                            data.Logger.Warning($"bad arguments: {args[0]}");
                             Console.WriteLine($"Неизввестный аргумент : {item.Key}");
                             return;
                     }
                 }
                 if (description == string.Empty)
                 {
+                    data.Logger.Warning("null parametr fot -n");
                     Console.WriteLine("Нулевой параметр -n, воспользуйтесь командой:" +
                         " ? targets-add для получения помощи");
                     return;
                 }
                 if (date == DateOnly.MinValue)
                 {
+                    data.Logger.Warning("null parametr for -d");
                     Console.WriteLine("Нулевой параметр -d, воспользуйтесь командой:" +
                          " ? targets-add для получения помощи");
                     return;
@@ -622,7 +674,8 @@ namespace TimeControl.Cases
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Произошла ошибка : {ex.Message}");
+                data.Logger.Error(ex.ToString());
+                Console.WriteLine($"Произошла ошибка");
             }
         }
     }

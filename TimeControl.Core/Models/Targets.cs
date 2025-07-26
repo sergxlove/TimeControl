@@ -56,9 +56,10 @@
             return (target, error);
         }
 
-        public void Update(int doneDuration)
+        public void UpdateDuration(int doneDuration)
         {
-
+            DoneDurationMinutes += doneDuration;
+            if(DoneDurationMinutes >= DurationMinutes) IsDone = true;
         }
 
         public override string ToString()
