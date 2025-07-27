@@ -27,7 +27,16 @@ git clone git@github.com:sergxlove/TimeControl.git
 ## Example using 
 ```bash
 
+user > start -n read-book
+Задача: read-book запущена 27.07.2025 17:14:29
+
+user > stop
+Задача read-book остановлена 27.07.2025 17:21:27
+
+user > tasks
+27.07.2025   |   read-book   |   0 h. 6 m.
 ```
 
 ## Aviable commands
 
+You can view all the available commands [here](./command.md) .
